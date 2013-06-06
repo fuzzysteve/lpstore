@@ -80,27 +80,32 @@ $corpname=$row->itemName;
 <head>
 <title>LP Store - Return on ISK - <? echo $corpname ?> - <? echo ucfirst($regionname); ?> <? echo ucfirst($method); ?></title>
   <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <link href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" rel="stylesheet" type="text/css"/>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="/lpstore/jquery.tablesorter.min.js"></script>
+  <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script>
+jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+    "currency-pre": function ( a ) {
+        a = (a==="-") ? 0 : a.replace( /[^\d\-\.]/g, "" );
+        return parseFloat( a );
+    },
+ 
+    "currency-asc": function ( a, b ) {
+        return a - b;
+    },
+ 
+    "currency-desc": function ( a, b ) {
+        return b - a;
+    }
+} );
 
-jQuery.tablesorter.addParser({
-  id: "commaDigit",
-  is: function(s, table) {
-    var c = table.config;
-    return jQuery.tablesorter.isDigit(s.replace(/,/g, ""), c);
-  },
-  format: function(s) {
-    return jQuery.tablesorter.formatFloat(s.replace(/,/g, ""));
-  },
-  type: "numeric"
-});
 
 $(document).ready(function()
     {
-        $("#lp").tablesorter({headers: {6: {sorter:'commaDigit'},0: {sorter:'commaDigit'},1: {sorter:'commaDigit'},4: {sorter:'commaDigit'}}});
-
+        $("#lp").dataTable({
+            "aoColumns":[null,{"sType": "currency" },{ "sType": "currency" },null,null,{ "sType": "currency" },{ "sType": "currency" },{ "sType": "currency" },{ "sType": "currency" },{ "sType": "currency" }]
+});
     }
 );
 </script>
@@ -118,15 +123,17 @@ $(document).ready(function()
 
 if ($blueprints)
 {
-$sql='select storeid id,it1.typename,it1.typeid,quantity,lpcost,iskCost,coalesce(productTypeID,0) productTypeID,(wasteFactor/100)+1 wasteFactor from evesupport.lpStore join eve.invTypes it1 on (lpStore.typeid=it1.typeid) left join eve.invBlueprintTypes on (lpStore.typeid=eve.invBlueprintTypes.blueprintTypeID) where corporationID=?';
+$sql='select lpOffers.offerID id,it1.typename,it1.typeid,quantity,lpcost,iskCost,coalesce(productTypeID,0) productTypeID,(wasteFactor/100)+1 wasteFactor from lpstore.lpStore join lpstore.lpOffers on lpStore.offerID=lpOffers.offerID  join eve.invTypes it1 on (lpOffers.typeid=it1.typeid) left join eve.invBlueprintTypes on (lpOffers.typeid=eve.invBlueprintTypes.blueprintTypeID) where corporationID=?';
+#select storeid id,it1.typename,it1.typeid,quantity,lpcost,iskCost,coalesce(productTypeID,0) productTypeID,(wasteFactor/100)+1 wasteFactor from evesupport.lpStore join eve.invTypes it1 on (lpStore.typeid=it1.typeid) left join eve.invBlueprintTypes on (lpStore.typeid=eve.invBlueprintTypes.blueprintTypeID) where corporationID=?';
 }
 else
 {
-$sql='select storeid id,it1.typename,it1.typeid,quantity,lpcost,iskCost,0 productTypeID,1 wasteFactor from evesupport.lpStore join eve.invTypes it1 on (lpStore.typeid=it1.typeid) where corporationID=? and marketgroupid is not null';
+$sql='select lpOffers.offerID id,it1.typename,it1.typeid,quantity,lpcost,iskCost,0 productTypeID,1 wasteFactor from lpstore.lpStore join lpstore.lpOffers on lpStore.offerID=lpOffers.offerID join eve.invTypes it1 on (lpOffers.typeid=it1.typeid) where corporationID=? and marketgroupid is not null';
+#select storeid id,it1.typename,it1.typeid,quantity,lpcost,iskCost,0 productTypeID,1 wasteFactor from evesupport.lpStore join eve.invTypes it1 on (lpStore.typeid=it1.typeid) where corporationID=? and marketgroupid is not null';
 }
 
 $stmt = $dbh->prepare($sql);
-$requiredsql='select typename,invTypes.typeid,quantity from eve.invTypes ,evesupport.lpRequiredItems where parentid=? and invTypes.typeid=lpRequiredItems.typeid';
+$requiredsql='select typename,invTypes.typeid,quantity from eve.invTypes ,lpstore.lpOfferRequirements where offerid=? and invTypes.typeid=lpOfferRequirements.typeid';
 $stmt2 = $dbh->prepare($requiredsql);
 $basicmaterials='SELECT typeid,name typename,round(greatest(0,SUM(quantity))*:waste*:quantity) quantity FROM (
   SELECT invTypes.typeid typeid,invTypes.typeName name,quantity

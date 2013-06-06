@@ -20,7 +20,7 @@ require_once('db.inc.php');
 <select name="corpid">
 <?
 
-$sql='select distinct itemName,itemID,confirmed,dateconfirmed from  eve.invNames,evesupport.lpStore,evesupport.lpConfirmed where evesupport.lpStore.corporationID=eve.invNames.itemID and evesupport.lpConfirmed.corporationID=evesupport.lpStore.corporationID order by eve.invNames.itemName Asc';
+$sql='select distinct itemName,itemID from  eve.invNames,lpstore.lpStore where lpStore.corporationID=eve.invNames.itemID order by eve.invNames.itemName Asc';
 
 $stmt = $dbh->prepare($sql);
 
@@ -28,17 +28,7 @@ $stmt->execute();
 
 while ($row = $stmt->fetchObject()){
 $name=$row->itemName;
-if ($row->confirmed==1)
-{
-$name.=" - Data confirmed:".$row->dateconfirmed;
-$class="good";
-}
-else
-{
-$name.=" - Data not yet confirmed";
-$class="unconfirmed";
-}
-echo "<option class='$class' value=";
+echo "<option value=";
 echo  '"'.$row->itemID.'">'.$name.'</option>';
 }
 ?>
