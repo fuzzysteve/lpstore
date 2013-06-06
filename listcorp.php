@@ -217,7 +217,7 @@ while ($row = $stmt->fetchObject()){
             if ($basic->quantity==0){continue;};
             if (array_key_exists($basic->typeid.'|'.$basic->typename,$materials))
             {
-                $materials[$basic->typeid.'|'.$basic->typename].=$basic->quantity;
+                $materials[$basic->typeid.'|'.$basic->typename]+=$basic->quantity;
             }
             else
             {
@@ -228,7 +228,7 @@ while ($row = $stmt->fetchObject()){
         while ($extra = $extrastmt->fetchObject()){
             if (array_key_exists($extra->typeid.'|'.$extra->typename,$materials))
             {
-                $materials[$extra->typeid.'|'.$extra->typename].=$extra->quantity;
+                $materials[$extra->typeid.'|'.$extra->typename]+=$extra->quantity;
             }
             else
             {
