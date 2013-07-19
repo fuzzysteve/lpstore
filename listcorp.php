@@ -4,9 +4,11 @@ header("Pragma: public");
 header("Cache-Control: maxage=".$expires);
 header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
 require_once('db.inc.php');
+$pricetype='redis';
+#$pricetype='memcache';
+#$pricetype='marketdata';
 
-$memcache = new Memcache;
-$memcache->connect('localhost', 11211) or die ("Could not connect");
+require_once($pricetype.'price.php');
 $corpid=0;
 if (array_key_exists('corpid',$_POST) && is_numeric($_POST['corpid']))
 {
@@ -79,11 +81,11 @@ $corpname=$row->itemName;
 <html>
 <head>
 <title>LP Store - Return on ISK - <? echo $corpname ?> - <? echo ucfirst($regionname); ?> <? echo ucfirst($method); ?></title>
-  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
-  <link href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" rel="stylesheet" type="text/css"/>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+  <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <link href="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" rel="stylesheet" type="text/css"/>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script>
 jQuery.extend( jQuery.fn.dataTableExt.oSort, {
     "currency-pre": function ( a ) {
@@ -112,7 +114,7 @@ $(document).ready(function()
 <link href="/lpstore/style.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-<h1><a href="http://www.fuzzwork.co.uk/lpstore/<? echo $method;?>/<? echo $regionid ?>/<? echo $corpid; echo $urlsuffix;?>"><? echo $corpname; ?></a> <? echo ucfirst($regionname); ?> <? echo ucfirst($method);?> Prices</h1>
+<h1><a href="//www.fuzzwork.co.uk/lpstore/<? echo $method;?>/<? echo $regionid ?>/<? echo $corpid; echo $urlsuffix;?>"><? echo $corpname; ?></a> <? echo ucfirst($regionname); ?> <? echo ucfirst($method);?> Prices</h1>
 <table border=1 id="lp" class="tablesorter">
 <thead>
 <tr><th>id</th><th>LP</th><th>Isk</th><th>Item</th><th>Other Requirements</th><th>Other Cost</th><th>Quantity</th><th><? echo ucfirst($method);?> Price</th><th>5% Volume</th><th>isk/lp</th></tr>
@@ -173,9 +175,8 @@ while ($row = $stmt->fetchObject()){
     {
     $typeid=$row->typeid;
     }
-    $pricedatasell=$memcache->get($region.$method.'-'.$typeid);
-    $values=explode("|",$pricedatasell);
-    $price=$values[0];
+    list($price,$pricebuy)=returnprice($row->typeid,$region);
+    if ($method=='buy'){ $price=$pricebuy; }
     if (array_key_exists(2,$values))
     {
         $volume=$values[2];
@@ -194,9 +195,7 @@ while ($row = $stmt->fetchObject()){
     $other="<table  class='tablesorter'><tr><th colspan=2>LP Store</th></tr>";
     while ($row2 = $stmt2->fetchObject()){
         $other.="<tr><td>".$row2->quantity."</td><td>".$row2->typename."</td></tr>";
-        $pricedatasell=$memcache->get($region.'sell-'.$row2->typeid);
-        $values=explode("|",$pricedatasell);
-        $innerprice=$values[0];
+        list($innerprice,$pricebuy)=returnprice($row2->typeid,$region);
         if ($innerprice=="")
         {
             $innerprice=0;
@@ -238,9 +237,7 @@ while ($row = $stmt->fetchObject()){
         foreach ($materials as $key => $quantity){
             $matdetails=explode("|",$key);
             $other.="<tr><td>".$quantity."</td><td>".$matdetails[1]."</td></tr>";
-            $pricedatasell=$memcache->get($region.'sell-'.$matdetails[0]);
-            $values=explode("|",$pricedatasell);
-            $innerprice=$values[0];
+            list($innerprice,$pricebuy)=returnprice($matdetails[0],$region);
             if ($innerprice=="")
             {
                 $innerprice=0;
@@ -266,7 +263,7 @@ while ($row = $stmt->fetchObject()){
     else if  ($ratio>500){
         $class="ok";
     }
-    echo "<tr><td>$row->id</td><td>".number_format($row->lpcost)."</td><td>".number_format($row->iskCost)."</td><td>".$row->typename."</td><td>".$other."</td><td>".number_format($otherprice)."</td><td>".$row->quantity."</td><td>".number_format($price,2)."</td><td>".$volume."</td><td class=\"$class\">".$ratio."</td></tr>\n";
+    echo "<tr><td>$row->id</td><td>".number_format($row->lpcost)."</td><td>".number_format($row->iskCost)."</td><td data-typeid='".$row->typeid."'><a href='//www.eve-markets.net/detail?typeid=".$row->typeid."' target='_blank'>".$row->typename."</a></td><td>".$other."</td><td>".number_format($otherprice)."</td><td>".$row->quantity."</td><td>".number_format($price,2)."</td><td>".$volume."</td><td class=\"$class\">".$ratio."</td></tr>\n";
 }
 ?>
 </tbody>
