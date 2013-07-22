@@ -25,4 +25,27 @@ function returnprice($typeid=34,$regionid='forge')
 
 }
 
+function returnvolume($typeid=34,$regionid='forge')
+{
+        global $memcache;
+        $pricedatasell=$memcache->get($regionid.'sell-'.$typeid);
+        $pricedatabuy=$memcache->get($regionid.'buy-'.$typeid);
+        $values=explode("|",$pricedatasell);
+        $fivesell=$values[2];
+        if (!(is_numeric($fivesell)))
+        {
+            $fivesell=0;
+        }
+        $values=explode("|",$pricedatabuy);
+        $fivebuy=$values[2];
+        if (!(is_numeric($fivebuy)))
+        {
+            $fivebuy=0;
+        }
+
+        return array($fivesell,$fivebuy);
+
+}
+
+
 ?>

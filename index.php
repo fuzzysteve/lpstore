@@ -20,7 +20,7 @@ require_once('db.inc.php');
 <select name="corpid">
 <?
 
-$sql='select distinct itemName,itemID from  eve.invNames,lpstore.lpStore where lpStore.corporationID=eve.invNames.itemID order by eve.invNames.itemName Asc';
+$sql='select itemName,itemID from  lpstore.lpcorps order by itemName Asc';
 
 $stmt = $dbh->prepare($sql);
 

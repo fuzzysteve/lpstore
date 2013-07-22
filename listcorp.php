@@ -176,13 +176,8 @@ while ($row = $stmt->fetchObject()){
     $typeid=$row->typeid;
     }
     list($price,$pricebuy)=returnprice($row->typeid,$region);
-    if ($method=='buy'){ $price=$pricebuy; }
-    if (array_key_exists(2,$values))
-    {
-        $volume=$values[2];
-    }
-    else
-    {$volume=0;}
+    list($volume,$fivebuy)=returnvolume($row->typeid,$region);
+    if ($method=='buy'){ $price=$pricebuy;$volume=$fivebuy; }
     if ($price=="")
     {
         $price=0;
