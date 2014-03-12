@@ -83,9 +83,10 @@ $corpname=$row->itemName;
 <title>LP Store - Return on ISK - <? echo $corpname ?> - <? echo ucfirst($regionname); ?> <? echo ucfirst($method); ?></title>
   <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
   <link href="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" rel="stylesheet" type="text/css"/>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
   <script type="text/javascript" src="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+
 <script>
 jQuery.extend( jQuery.fn.dataTableExt.oSort, {
     "currency-pre": function ( a ) {
@@ -112,8 +113,11 @@ $(document).ready(function()
 );
 </script>
 <link href="/lpstore/style.css" rel="stylesheet" type="text/css"/>
+<?php include('/home/web/fuzzwork/htdocs/bootstrap/header.php'); ?>
 </head>
 <body>
+<?php include('/home/web/fuzzwork/htdocs/menu/menubootstrap.php'); ?>
+<div class="container">
 <h1><a href="//www.fuzzwork.co.uk/lpstore/<? echo $method;?>/<? echo $regionid ?>/<? echo $corpid; echo $urlsuffix;?>"><? echo $corpname; ?></a> <? echo ucfirst($regionname); ?> <? echo ucfirst($method);?> Prices</h1>
 <table border=1 id="lp" class="tablesorter">
 <thead>
@@ -126,7 +130,6 @@ $(document).ready(function()
 if ($blueprints)
 {
 $sql='select lpOffers.offerID id,it1.typename,it1.typeid,quantity,lpcost,iskCost,coalesce(productTypeID,0) productTypeID,(wasteFactor/100)+1 wasteFactor from lpstore.lpStore join lpstore.lpOffers on lpStore.offerID=lpOffers.offerID  join eve.invTypes it1 on (lpOffers.typeid=it1.typeid) left join eve.invBlueprintTypes on (lpOffers.typeid=eve.invBlueprintTypes.blueprintTypeID) where corporationID=?';
-#select storeid id,it1.typename,it1.typeid,quantity,lpcost,iskCost,coalesce(productTypeID,0) productTypeID,(wasteFactor/100)+1 wasteFactor from evesupport.lpStore join eve.invTypes it1 on (lpStore.typeid=it1.typeid) left join eve.invBlueprintTypes on (lpStore.typeid=eve.invBlueprintTypes.blueprintTypeID) where corporationID=?';
 }
 else
 {
@@ -175,8 +178,8 @@ while ($row = $stmt->fetchObject()){
     {
     $typeid=$row->typeid;
     }
-    list($price,$pricebuy)=returnprice($row->typeid,$region);
-    list($volume,$fivebuy)=returnvolume($row->typeid,$region);
+    list($price,$pricebuy)=returnprice($typeid,$region);
+    list($volume,$fivebuy)=returnvolume($typeid,$region);
     if ($method=='buy'){ $price=$pricebuy;$volume=$fivebuy; }
     if ($price=="")
     {
@@ -258,12 +261,13 @@ while ($row = $stmt->fetchObject()){
     else if  ($ratio>500){
         $class="ok";
     }
-    echo "<tr><td>$row->id</td><td>".number_format($row->lpcost)."</td><td>".number_format($row->iskCost)."</td><td data-typeid='".$row->typeid."'><a href='//www.eve-markets.net/detail?typeid=".$row->typeid."' target='_blank'>".$row->typename."</a></td><td>".$other."</td><td>".number_format($otherprice)."</td><td>".$row->quantity."</td><td>".number_format($price,2)."</td><td>".$volume."</td><td class=\"$class\">".$ratio."</td></tr>\n";
+    echo "<tr><td>$row->id</td><td>".number_format($row->lpcost)."</td><td>".number_format($row->iskCost)."</td><td data-typeid='".$row->typeid."'><a href='https://www.fuzzwork.co.uk/market/marketdisplay.php?typeid=".$row->typeid."&regionid=".$regionid."' target='_blank'>".$row->typename."</a></td><td>".$other."</td><td>".number_format($otherprice)."</td><td>".$row->quantity."</td><td>".number_format($price,2)."</td><td>".$volume."</td><td class=\"$class\">".$ratio."</td></tr>\n";
 }
 ?>
 </tbody>
 </table>
-<?php include('/home/web/fuzzwork/analytics.php'); ?>
+</div>
+<?php include('/home/web/fuzzwork/htdocs/bootstrap/footer.php'); ?>
 
 <!-- Generated <? echo date(DATE_RFC822);?> -->
 </body>
