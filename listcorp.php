@@ -156,8 +156,7 @@ if ($blueprints) {
         lpcost,
         iskCost,
         coalesce(productTypeID,0) productTypeID
-    from lpstore.lpStore 
-    join lpstore.lpOffers on lpStore.offerID=lpOffers.offerID  
+    from lpstore2.lpOffers  
     join eve.invTypes it1 on (lpOffers.typeid=it1.typeid) 
     left join eve.industryActivityProducts iap on 
         (lpOffers.typeid=iap.typeID and activityid=1) where corporationID=?
@@ -171,8 +170,7 @@ EOS;
         lpcost,
         iskCost,
         0 productTypeID
-    from lpstore.lpStore 
-    join lpstore.lpOffers on lpStore.offerID=lpOffers.offerID
+    from lpstore2.lpOffers
     join eve.invTypes it1 on (lpOffers.typeid=it1.typeid)
     where corporationID=? and marketgroupid is not null
 EOS;
@@ -183,7 +181,7 @@ $requiredsql=<<<EOS
     select typename,
         invTypes.typeid,
         quantity 
-    from eve.invTypes ,lpstore.lpOfferRequirements 
+    from eve.invTypes ,lpstore2.lpOfferRequirements 
     where offerid=? and invTypes.typeid=lpOfferRequirements.typeid
 EOS;
 $stmt2 = $dbh->prepare($requiredsql);

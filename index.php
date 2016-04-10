@@ -39,18 +39,18 @@ $(document).ready(function() {
 <div id="hidden" style='display:none'>
 <form action="listcorp.php" method="post">
 <select name="corpid">
-<?
+<?php
 
-$sql='select itemName,itemID from  lpstore.lpcorps order by itemName Asc';
+$sql='select distinct itemName,itemID from lpstore2.lpOffers join eve.invNames on corporationID=itemid order by itemName Asc';
 
 $stmt = $dbh->prepare($sql);
 
 $stmt->execute();
 
-while ($row = $stmt->fetchObject()){
-$name=$row->itemName;
-echo "<option value=";
-echo  '"'.$row->itemID.'">'.$name.'</option>';
+while ($row = $stmt->fetchObject()) {
+    $name=$row->itemName;
+    echo "<option value=";
+    echo  '"'.$row->itemID.'">'.$name.'</option>';
 }
 ?>
 
