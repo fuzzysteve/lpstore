@@ -159,7 +159,7 @@ if ($blueprints) {
     from lpstore2.lpOffers  
     join eve.invTypes it1 on (lpOffers.typeid=it1.typeid) 
     left join eve.industryActivityProducts iap on 
-        (lpOffers.typeid=iap.typeID and activityid=1) where corporationID=?
+        (lpOffers.typeid=iap.typeID and activityid=1) where corporationID=? and akcost=0
 EOS;
 } else {
     $sql=<<<EOS
@@ -172,7 +172,7 @@ EOS;
         0 productTypeID
     from lpstore2.lpOffers
     join eve.invTypes it1 on (lpOffers.typeid=it1.typeid)
-    where corporationID=? and marketgroupid is not null
+    where corporationID=? and marketgroupid is not null and akcost=0
 EOS;
 }
 
