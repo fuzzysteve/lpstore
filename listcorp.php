@@ -34,18 +34,17 @@ if (array_key_exists('blueprints', $_GET)||array_key_exists('blueprints', $_POST
     $urlsuffix="";
 }
 
-$regionid=10000002;
 if (array_key_exists('region', $_POST) && is_numeric($_POST['region'])) {
     $regionid=$_POST['region'];
-} elseif (array_key_exists('corpid', $_GET) &&is_numeric($_GET['region'])) {
+} elseif (array_key_exists('region', $_GET) && is_numeric($_GET['region'])) {
     $regionid=$_GET['region'];
 }
-
 if ($regionid==10000002) {
     $region="forge";
 } else {
     $region=$regionid;
 }
+
 
 $regionnamesql="select regionname from eve.mapRegions where regionid=?";
 $stmt = $dbh->prepare($regionnamesql);
@@ -126,7 +125,7 @@ $(document).ready(function()
 <div class="container">
 <h1><a href="//www.fuzzwork.co.uk/lpstore/<?php echo $method."/".$regionid."/".$corpid.$urlsuffix;?>">
 <?php echo $corpname; ?></a> 
-<?php echo ucfirst($regionname); ?>
+<?php echo ucfirst($regionname); ?> 
 <?php echo ucfirst($method);?> Prices</h1>
 <table border=1 id="lp" class="tablesorter">
 <thead>
@@ -272,8 +271,9 @@ while ($row = $stmt->fetchObject()) {
     }
     echo "<tr><td>$row->id</td><td>".number_format($row->lpcost)."</td>";
     echo "<td>".number_format($row->iskCost)."</td><td data-typeid='".$row->typeid."'>";
-    echo "<a href='https://www.fuzzwork.co.uk/market/marketdisplay.php?typeid=".$row->typeid."&regionid=".$regionid."' target='_blank'>";
-    echo $row->typename."</a></td><td>".$other."</td><td>".number_format($otherprice)."</td><td>".$row->quantity."</td><td>".number_format($price, 2)."</td><td>".$volume."</td><td class=\"$class\">".$ratio."</td></tr>\n";
+    echo "<a href='https://market.fuzzwork.co.uk/region/".$regionid."/type/".$row->typeid."/' target='_blank'>";
+    echo $row->typename."</a></td><td>".$other."</td><td>".number_format($otherprice)."</td><td>".$row->quantity."</td><td>";
+    echo number_format($price, 2)."</td><td>".$volume."</td><td class=\"$class\">".$ratio."</td></tr>\n";
 }
 ?>
 </tbody>

@@ -1,1 +1,1 @@
-<? $method2='buy'; require('listcorp.php'); ?>
+<?php $method2='buy'; require('listcorp.php'); ?>

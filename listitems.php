@@ -23,12 +23,11 @@ if ($row = $stmt->fetchObject()) {
     exit;
 }
 
-$sql="select distinct corp.itemname,lpStore.corporationID,faction.itemname faction
-from lpstore.lpStore 
-join lpstore.lpOffers on lpStore.offerid=lpOffers.offerid 
-join eve.invNames corp on lpStore.corporationID=corp.itemid
-join eve.crpNPCCorporations on lpStore.corporationID=crpNPCCorporations.corporationID
-join eve.invNames faction on crpNPCCorporations.factionID=faction.itemid
+$sql="select distinct corp.itemname,lpOffers.corporationID,faction.itemname faction
+    from lpstore2.lpOffers 
+    join eve.invNames corp on lpOffers.corporationID=corp.itemid
+join lpstore2.crpNPCCorporations on lpOffers.corporationID=crpNPCCorporations.corporationID
+join lpstore.invNames faction on crpNPCCorporations.factionID=faction.itemid
 where lpOffers.typeid=?
 order by corp.itemname asc";
 $stmt = $dbh->prepare($sql);
@@ -62,7 +61,16 @@ $(document).ready(function()
 <body>
 <?php include('/home/web/fuzzwork/htdocs/menu/menubootstrap.php'); ?>
 <div class="container">
-<h1><?php echo $itemname; ?></h1>
+<h1><?php 
+echo $itemname;
+if (strpos($itemname,"Blueprint")) {
+$blueprint="/withblueprints";
+} else {
+$blueprint="";
+}
+
+
+ ?></h1>
 <table border=1 id="lp" class="tablesorter">
 <thead>
 <tr><th>Corporation</th><th>faction</th><th>buy/sell</th></tr>
@@ -72,8 +80,8 @@ $(document).ready(function()
 
 while ($row = $stmt->fetchObject()) {
     echo "<tr><td>".$row->itemname."</td><td>".$row->faction."</td><td>";
-    echo "<a href='https://www.fuzzwork.co.uk/lpstore/sell/10000002/".$row->corporationID."'>Sell</a>/";
-    echo "<a href='https://www.fuzzwork.co.uk/lpstore/buy/10000002/".$row->corporationID."'>Buy</a>";
+    echo "<a href='https://www.fuzzwork.co.uk/lpstore/sell/10000002/".$row->corporationID.$blueprint."'>Sell</a>/";
+    echo "<a href='https://www.fuzzwork.co.uk/lpstore/buy/10000002/".$row->corporationID.$blueprint."'>Buy</a>";
 }
 ?>
 </tbody>

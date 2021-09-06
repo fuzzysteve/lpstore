@@ -31,8 +31,6 @@ $(document).ready(function() {
 <p>All the blueprints assume that you have production efficiency 5. If you don't, they will not be as profitable, as an extra 25% or so materials will be required.</p>
 <p>Prices are as per a simulated 5% buy from the Jita market. The (jita buy) option uses Jita sell prices for all the components, but the price for the final item is the buy price. (In case you just want to dump it). Keep an eye on the volume, to see if the market can easily absorb the number you're thinking about, if you don't want to sell them yourself. Prices can be manipulated, so watch out for that.</p>
 <P>You can now pick the region you want to see prices from. Completeness of price data is not guaranteed. There's a reason people use Jita</p>
-<p>LP store data is from <a href="https://forums.eveonline.com/default.aspx?g=posts&m=2523821">here</a>. It may be incorrect or incomplete. If it is, drop Sable Blitzmann the details. Or me, and I'll take it from there.</p>
-<p>If your prefered corporation isn't yet marked as Confirmed, I'd appreciate it if you can have a look through and see if anything looks wrong. It doesn't mean it <em>is</em> wrong, just that it's not been doublechecked. If you have checked it, drop me a mail (Steve Ronuken in game. Sable Blitzmann would probably also like to know) and I can get it marked here. If you find an error, let me know what the id is (first column) and what it should be.<p>
 </div>
 </div>
 <a class="btn btn-primary" id="checkbutton" onclick="document.getElementById('hidden').style.display='block';Cookies.set('checked','checked',{expires:3650})">I've read the above and understand it</a>
@@ -57,20 +55,19 @@ while ($row = $stmt->fetchObject()) {
 </select>
 <label for="blueprints">Blueprints?</label><input type=checkbox name=blueprints id=blueprints>
 <select name="region">
-<?
-$sql='select regionid,regionname from eve.mapRegions order by regionname';
+<?php
+$sql='select regionid,regionname from eve.mapRegions where regionid< 11000000 order by regionname';
 
 $stmt = $dbh->prepare($sql);
 
 $stmt->execute();
 
-while ($row = $stmt->fetchObject()){
-echo "<option value=".$row->regionid;
-if ($row->regionid==10000002)
-{
-echo " selected";
-}
-echo ">".$row->regionname.'</option>';
+while ($row = $stmt->fetchObject()) {
+    echo "<option value=".$row->regionid;
+    if ($row->regionid==10000002) {
+        echo " selected";
+    }
+    echo ">".$row->regionname.'</option>';
 }
 ?>
 </select>

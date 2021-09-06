@@ -7,7 +7,7 @@ header('Content-Type: application/javascript');
 
 require_once('db.inc.php');
 
-$sql='select distinct typename from lpstore.lpOffers join eve.invTypes on lpOffers.typeid=invTypes.typeid order by typename asc';
+$sql='select distinct typename from lpstore2.lpOffers join eve.invTypes on lpOffers.typeid=invTypes.typeid order by typename asc';
 
 $stmt = $dbh->prepare($sql);
 
@@ -16,9 +16,7 @@ $stmt->execute();
 echo "source=[";
 $row = $stmt->fetchObject();
 echo  '"'.$row->typename.'"';
-while ($row = $stmt->fetchObject()){
-echo ',"'.$row->typename.'"';
+while ($row = $stmt->fetchObject()) {
+    echo ',"'.$row->typename.'"';
 }
 echo "];\n";
-?>
-
