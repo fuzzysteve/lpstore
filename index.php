@@ -83,6 +83,9 @@ while ($row = $stmt->fetchObject()) {
 <input type="submit" value="Find Store">
 </form>
 </div>
+<div>
+<p>Database export: <a href="data/lpOffers.csv">lpOffers.csv</a> / <a href="data/lpOfferRequirements.csv">lpOfferRequirements.csv</a></p>
+</div>
 </div>
 <?php include('/home/web/fuzzwork/htdocs/bootstrap/footer.php'); ?>
 </body>
