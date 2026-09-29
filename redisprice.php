@@ -13,13 +13,13 @@ function returnprice($typeid=34,$regionid='10000002')
         $pricedatasell=$redis->get($regionid.'|'.$typeid.'|false');
         $pricedatabuy=$redis->get($regionid.'|'.$typeid.'|true');
         $values=explode("|",$pricedatasell);
-        $price=$values[7];
+        $price=$values[7] ?? 0;
         if (!(is_numeric($price)))
         {
             $price=0;
         }
         $values=explode("|",$pricedatabuy);
-        $pricebuy=$values[7];
+        $pricebuy=$values[7] ?? 0;
         if (!(is_numeric($pricebuy)))
         {
             $pricebuy=0;
@@ -37,7 +37,7 @@ function returnvolume($typeid=34,$regionid='10000002')
         if (isset($pricedatasell))
         {
             $values=explode("|",$pricedatasell);
-            $fivesell=$values[5];
+            $fivesell=$values[5] ?? 0;
             if (!(is_numeric($fivesell)))
             {
                 $fivesell=0;
@@ -47,7 +47,7 @@ function returnvolume($typeid=34,$regionid='10000002')
         if (isset($pricedatabuy))
         {
             $values=explode("|",$pricedatabuy);
-            $fivebuy=$values[5];
+            $fivebuy=$values[5] ?? 0;
             if (!(is_numeric($fivebuy)))
             {
                 $fivebuy=0;
