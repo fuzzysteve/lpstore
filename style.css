@@ -7,3 +7,8 @@
 #filters .form-control { width: 6em; }
 #filters .form-group { margin-right: 1.5em; }
 #filters { margin-bottom: 1em; }
+/* the status colours must beat DataTables' sorted-column tint (td.sorting_1),
+   which dark-mode.css forces with !important */
+#lp td.good { background-color: lightgreen !important; }
+#lp td.ok { background-color: yellow !important; }
+#lp td.bad { background-color: red !important; }

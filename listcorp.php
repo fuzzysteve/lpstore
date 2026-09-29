@@ -345,7 +345,7 @@ $(document).ready(function() {
     }).fail(showError);
 });
 </script>
-<link href="/lpstore/style.css?v=2" rel="stylesheet" type="text/css"/>
+<link href="/lpstore/style.css?v=3" rel="stylesheet" type="text/css"/>
 <?php include('/home/web/fuzzwork/htdocs/bootstrap/header.php'); ?>
 </head>
 <body>
