@@ -60,6 +60,13 @@ var pageUrl='https://www.fuzzwork.co.uk/lpstore/'+config.method+'/'+config.regio
     +(config.blueprints?'/withblueprints':'');
 var apiUrl='/lpstore/api.php';
 
+var regionNames={};
+// Regions shown; the page's own region is always first
+var loadedRegions=[config.region];
+// Offer rows for every loaded region, each tagged with its regionID and Region
+var rows=[];
+var table=null;
+
 // [data key, min input id, max input id]
 var rangeFilters=[
     [ratioKey, 'ratiomin', 'ratiomax'],
@@ -94,6 +101,22 @@ function requirementsTable(title, items) {
     return html+'</table>';
 }
 
+function regionRows(regionid, offers) {
+    $.each(offers, function(i, offer) {
+        offer.regionID=regionid;
+        offer.Region=regionNames[regionid];
+    });
+    return offers;
+}
+
+function offerParams(regionid) {
+    var params={corpid: config.corpid, region: regionid};
+    if (config.blueprints) {
+        params.blueprints=1;
+    }
+    return params;
+}
+
 function boundValue(id) {
     var value=$('#'+id).val();
     return value===''?null:parseFloat(value);
@@ -115,7 +138,7 @@ $.fn.dataTableExt.afnFiltering.push(function(oSettings, aData, iDataIndex) {
     return true;
 });
 
-// Keep the filters in the query string so filtered views can be linked
+// Keep the filters and extra regions in the query string so views can be linked
 function updateUrl() {
     var params=[];
     $.each(rangeFilters, function(i, filter) {
@@ -126,6 +149,9 @@ function updateUrl() {
             }
         });
     });
+    if (loadedRegions.length>1) {
+        params.push('regions='+loadedRegions.slice(1).join(','));
+    }
     try {
         history.replaceState({}, '', pageUrl+(params.length?'?'+params.join('&'):''));
     } catch (err) {
@@ -133,13 +159,28 @@ function updateUrl() {
     }
 }
 
-function loadFiltersFromUrl() {
+// Sets the filter inputs from the query string, and returns the extra regions asked for
+function loadFromUrl() {
+    var regions=[];
     $.each(window.location.search.substring(1).split('&'), function(i, pair) {
         var parts=pair.split('=');
-        if (parts.length==2 && /^(ratio|lp|vol)(min|max)$/.test(parts[0])) {
-            $('#'+parts[0]).val(decodeURIComponent(parts[1]));
+        if (parts.length!=2) {
+            return;
+        }
+        var value=decodeURIComponent(parts[1]);
+        if (/^(ratio|lp|vol)(min|max)$/.test(parts[0])) {
+            $('#'+parts[0]).val(value);
+        } else if (parts[0]=='regions') {
+            regions=$.map(value.split(','), function(id) {
+                return /^\d+$/.test(id)?parseInt(id, 10):null;
+            });
         }
     });
+    return regions;
+}
+
+function showStatus(message) {
+    $('#status').removeClass('alert-danger').addClass('alert-info').text(message).show();
 }
 
 function showError(jqXHR) {
@@ -150,48 +191,113 @@ function showError(jqXHR) {
     $('#status').removeClass('alert-info').addClass('alert-danger').text(message).show();
 }
 
+function renderRegionControls() {
+    var select=$('#addregion').empty();
+    $('<option>').val('').text('Add region…').appendTo(select);
+    $.each(regionNames, function(regionid, name) {
+        if ($.inArray(parseInt(regionid, 10), loadedRegions)==-1) {
+            $('<option>').val(regionid).text(name).appendTo(select);
+        }
+    });
+    var list=$('#loadedregions').empty();
+    $.each(loadedRegions.slice(1), function(i, regionid) {
+        $('<button type="button" class="btn btn-default btn-sm removeregion">')
+            .attr('data-region', regionid).attr('title', 'Remove '+regionNames[regionid])
+            .html(escapeHtml(regionNames[regionid])+' &times;').appendTo(list);
+    });
+}
+
+function loadRegions(regionids) {
+    regionids=$.grep(regionids, function(regionid, i) {
+        return regionNames[regionid]!==undefined && $.inArray(regionid, loadedRegions)==-1
+            && $.inArray(regionid, regionids)==i;
+    });
+    if (!regionids.length) {
+        return;
+    }
+    showStatus('Loading '+$.map(regionids, function(regionid) {
+        return regionNames[regionid];
+    }).join(', ')+'…');
+    $('#addregion').prop('disabled', true);
+
+    var pending=regionids.length, failure=null;
+    $.each(regionids, function(i, regionid) {
+        $.getJSON(apiUrl, offerParams(regionid)).done(function(offers) {
+            var added=regionRows(regionid, offers);
+            rows=rows.concat(added);
+            loadedRegions.push(regionid);
+            table.fnAddData(added);
+        }).fail(function(jqXHR) {
+            failure=jqXHR;
+        }).always(function() {
+            if (--pending) {
+                return;
+            }
+            renderRegionControls();
+            updateUrl();
+            $('#addregion').prop('disabled', false);
+            if (failure) {
+                showError(failure);
+            } else {
+                $('#status').hide();
+            }
+        });
+    });
+}
+
+function removeRegion(regionid) {
+    loadedRegions=$.grep(loadedRegions, function(id) {
+        return id!=regionid;
+    });
+    rows=$.grep(rows, function(row) {
+        return row.regionID!=regionid;
+    });
+    table.fnClearTable(false);
+    table.fnAddData(rows);
+    renderRegionControls();
+    updateUrl();
+}
+
 $(document).ready(function() {
     $('#pricehead').text(method+' Price');
-    loadFiltersFromUrl();
+    var extraRegions=loadFromUrl();
     updateUrl();
 
-    var offerParams={corpid: config.corpid, region: config.region};
-    if (config.blueprints) {
-        offerParams.blueprints=1;
-    }
     $.when(
-        $.getJSON(apiUrl, offerParams),
+        $.getJSON(apiUrl, offerParams(config.region)),
         $.getJSON(apiUrl, {list: 'corporations'}),
         $.getJSON(apiUrl, {list: 'regions'})
     ).done(function(offers, corporations, regions) {
-        var corpname='', regionname='';
+        var corpname='';
         $.each(corporations[0], function(i, corp) {
             if (corp.corporationID==config.corpid) {
                 corpname=corp.Corporation;
             }
         });
         $.each(regions[0], function(i, region) {
-            if (region.regionID==config.region) {
-                regionname=region.Region;
-            }
+            regionNames[region.regionID]=region.Region;
         });
-        document.title='LP Store - Return on ISK - '+corpname+' - '+regionname+' '+method;
+        document.title='LP Store - Return on ISK - '+corpname+' - '+regionNames[config.region]+' '+method;
         $('#corpname').text(corpname).attr('href', pageUrl);
-        $('#regionname').text(regionname);
+        $('#regionname').text(regionNames[config.region]);
         $('#status').hide();
 
-        var table=$('#lp').dataTable({
-            "aaData": offers[0],
+        rows=regionRows(config.region, offers[0]);
+        table=$('#lp').dataTable({
+            "aaData": rows,
             "bDeferRender": true,
+            // by offer, then region, so each offer's regions sit together
+            "aaSorting": [[0, "asc"], [1, "asc"]],
             "aoColumns": [
                 {"mData": "id"},
+                {"mData": "Region"},
                 {"mData": "LPCost", "sType": "numeric", "mRender": numberColumn(0)},
                 {"mData": "IskCost", "sType": "numeric", "mRender": numberColumn(0)},
                 {"mData": "Item", "mRender": function(data, type, offer) {
                     if (type!=='display') {
                         return data;
                     }
-                    return "<a href='https://market.fuzzwork.co.uk/region/"+config.region+"/type/"
+                    return "<a href='https://market.fuzzwork.co.uk/region/"+offer.regionID+"/type/"
                         +offer.typeID+"/' target='_blank'>"+escapeHtml(data)+"</a>";
                 }},
                 {"mData": "Other Requirements", "mRender": function(data, type, offer) {
@@ -215,6 +321,9 @@ $(document).ready(function() {
                     }}
             ]
         });
+        renderRegionControls();
+        $('#regionpicker').show();
+        loadRegions(extraRegions);
 
         $('#filters input').on('input change', function() {
             table.fnDraw();
@@ -224,6 +333,14 @@ $(document).ready(function() {
             $('#filters input').val('');
             table.fnDraw();
             updateUrl();
+        });
+        $('#addregion').on('change', function() {
+            if (this.value) {
+                loadRegions([parseInt(this.value, 10)]);
+            }
+        });
+        $('#loadedregions').on('click', '.removeregion', function() {
+            removeRegion(parseInt($(this).attr('data-region'), 10));
         });
     }).fail(showError);
 });
@@ -256,11 +373,16 @@ $(document).ready(function() {
     </div>
     <button type="button" class="btn btn-default btn-sm" id="resetfilters">Clear filters</button>
 </form>
+<form id="regionpicker" class="form-inline" onsubmit="return false;" style="display:none">
+    <select class="form-control input-sm" id="addregion"></select>
+    <span id="loadedregions"></span>
+</form>
 <div id="status" class="alert alert-info">Loading&hellip;</div>
 <table border=1 id="lp" class="tablesorter">
 <thead>
 <tr>
     <th>id</th>
+    <th>Region</th>
     <th>LP</th>
     <th>Isk</th>
     <th>Item</th>
