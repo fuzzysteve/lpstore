@@ -6,6 +6,10 @@
  *   corpid     - required, corporation ID owning the LP store
  *   region     - optional, region ID for prices (default 10000002, The Forge)
  *   blueprints - optional, if present include blueprint offers (priced on their product)
+ *
+ * Lookup lists (no other parameters needed):
+ *   list=corporations - corporations with an LP store: [{corporationID, Corporation}]
+ *   list=regions      - regions prices can be requested for: [{regionID, Region}]
  */
 $expires = 3599;
 header("Pragma: public");
@@ -21,6 +25,31 @@ function apierror($code, $message)
 {
     http_response_code($code);
     echo json_encode(array('error' => $message));
+    exit;
+}
+
+$list=$_GET['list'] ?? $_POST['list'] ?? null;
+if ($list!==null) {
+    $output=array();
+    if ($list=='corporations') {
+        $sql=<<<EOS
+        select distinct itemID, itemName
+        from lpstore2.lpOffers
+        join eve.invNames on corporationID=itemID
+        order by itemName
+EOS;
+        foreach ($dbh->query($sql) as $row) {
+            $output[]=array('corporationID'=>(int)$row['itemID'], 'Corporation'=>$row['itemName']);
+        }
+    } elseif ($list=='regions') {
+        $sql='select regionid, regionname from eve.mapRegions where regionid<11000000 order by regionname';
+        foreach ($dbh->query($sql) as $row) {
+            $output[]=array('regionID'=>(int)$row['regionid'], 'Region'=>$row['regionname']);
+        }
+    } else {
+        apierror(400, 'list must be corporations or regions');
+    }
+    echo json_encode($output, JSON_UNESCAPED_SLASHES);
     exit;
 }
 

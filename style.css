@@ -3,3 +3,7 @@
 .ok { background-color:yellow !important;}
 .bad { background-color:red !important;}
 .hover { background-color:darkgrey !important;}
+/* range filters */
+#filters .form-control { width: 6em; }
+#filters .form-group { margin-right: 1.5em; }
+#filters { margin-bottom: 1em; }
