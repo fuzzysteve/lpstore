@@ -10,6 +10,7 @@
  * Lookup lists (no other parameters needed):
  *   list=corporations - corporations with an LP store: [{corporationID, Corporation}]
  *   list=regions      - regions prices can be requested for: [{regionID, Region}]
+ *   list=items        - items offered in any LP store: [{typeID, Item}]
  */
 $expires = 3599;
 header("Pragma: public");
@@ -46,8 +47,18 @@ EOS;
         foreach ($dbh->query($sql) as $row) {
             $output[]=array('regionID'=>(int)$row['regionid'], 'Region'=>$row['regionname']);
         }
+    } elseif ($list=='items') {
+        $sql=<<<EOS
+        select distinct invTypes.typeid, typename
+        from lpstore2.lpOffers
+        join eve.invTypes on lpOffers.typeid=invTypes.typeid
+        order by typename
+EOS;
+        foreach ($dbh->query($sql) as $row) {
+            $output[]=array('typeID'=>(int)$row['typeid'], 'Item'=>$row['typename']);
+        }
     } else {
-        apierror(400, 'list must be corporations or regions');
+        apierror(400, 'list must be corporations, regions or items');
     }
     echo json_encode($output, JSON_UNESCAPED_SLASHES);
     exit;

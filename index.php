@@ -1,23 +1,37 @@
-<?php
-
-require_once('db.inc.php');
-?>
 <html>
 <head>
 <title>LP Store - Return on ISK</title>
 <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-<script src="/lpstore/items.php"></script>
 <script src="/lpstore/js.cookie.js"></script>
 
 <script>
+var apiUrl='/lpstore/api.php';
+
+function fillSelect(select, rows, idKey, nameKey, selected) {
+    $.each(rows, function(i, row) {
+        $('<option>').val(row[idKey]).text(row[nameKey])
+            .prop('selected', row[idKey]==selected).appendTo(select);
+    });
+}
+
 $(document).ready(function() {
-    $("input#item").autocomplete({ source: source });
     if (Cookies.get('checked') == "checked" ){
         document.getElementById('hidden').style.display='block'
         document.getElementById('checkbutton').style.display='none'
     }
+    $.when(
+        $.getJSON(apiUrl, {list: 'corporations'}),
+        $.getJSON(apiUrl, {list: 'regions'}),
+        $.getJSON(apiUrl, {list: 'items'})
+    ).done(function(corporations, regions, items) {
+        fillSelect($('select[name=corpid]'), corporations[0], 'corporationID', 'Corporation');
+        fillSelect($('select[name=region]'), regions[0], 'regionID', 'Region', 10000002);
+        $("input#item").autocomplete({ source: $.map(items[0], function(item) { return item.Item; }) });
+    }).fail(function() {
+        $('#loaderror').show();
+    });
 });
 </script>
 
@@ -35,41 +49,12 @@ $(document).ready(function() {
 </div>
 <a class="btn btn-primary" id="checkbutton" onclick="document.getElementById('hidden').style.display='block';Cookies.set('checked','checked',{expires:3650})">I've read the above and understand it</a>
 <div id="hidden" style='display:none'>
+<div id="loaderror" class="alert alert-danger" style="display:none">Could not load the corporation and region lists.</div>
 <form action="listcorp.php" method="post">
 <select name="corpid">
-<?php
-
-$sql='select distinct itemName,itemID from lpstore2.lpOffers join eve.invNames on corporationID=itemid order by itemName Asc';
-
-$stmt = $dbh->prepare($sql);
-
-$stmt->execute();
-
-while ($row = $stmt->fetchObject()) {
-    $name=$row->itemName;
-    echo "<option value=";
-    echo  '"'.$row->itemID.'">'.$name.'</option>';
-}
-?>
-
 </select>
 <label for="blueprints">Blueprints?</label><input type=checkbox name=blueprints id=blueprints>
 <select name="region">
-<?php
-$sql='select regionid,regionname from eve.mapRegions where regionid< 11000000 order by regionname';
-
-$stmt = $dbh->prepare($sql);
-
-$stmt->execute();
-
-while ($row = $stmt->fetchObject()) {
-    echo "<option value=".$row->regionid;
-    if ($row->regionid==10000002) {
-        echo " selected";
-    }
-    echo ">".$row->regionname.'</option>';
-}
-?>
 </select>
 
 <input type=submit value="Select Corporation (Sell prices)" onclick="this.form.action='listcorp.php'">
