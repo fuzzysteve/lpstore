@@ -151,6 +151,7 @@ function iskperlp($quantity, $price, $cost, $lpcost)
     return round((($quantity*$price)-$cost)/$lpcost, 2);
 }
 
+$pricedate=returnpricedate();
 $output=array();
 $stmt->execute(array($corpid));
 while ($row = $stmt->fetchObject()) {
@@ -210,6 +211,7 @@ while ($row = $stmt->fetchObject()) {
         'Buy 5% Volume'=>(float)$buyvolume,
         'isk/lp sell'=>iskperlp($row->quantity, $sell, $cost, $row->lpcost),
         'isk/lp buy'=>iskperlp($row->quantity, $buy, $cost, $row->lpcost),
+        'Price Date'=>$pricedate,
         'Other Requirements'=>$requirements
     );
     if ($row->productTypeID>0) {

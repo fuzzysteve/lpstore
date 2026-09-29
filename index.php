@@ -71,6 +71,25 @@ $(document).ready(function() {
 <div>
 <p>Database export: <a href="data/lpOffers.csv">lpOffers.csv</a> / <a href="data/lpOfferRequirements.csv">lpOfferRequirements.csv</a></p>
 </div>
+<div>
+<h3>API</h3>
+<p>The same data is available as JSON, for use in your own tools. Same caveats as above: prices are a guide, not gospel.
+Responses are cached for an hour, and cross-origin requests are allowed.</p>
+<p><code>https://www.fuzzwork.co.uk/lpstore/api.php?corpid=<em>corporationID</em>&amp;region=<em>regionID</em></code></p>
+<ul>
+<li><code>corpid</code> - required. The corporation whose LP store you want.</li>
+<li><code>region</code> - optional, defaults to 10000002 (The Forge). The region prices are taken from.</li>
+<li><code>blueprints</code> - optional. If present, blueprint offers are included, priced on the item they build, with their build materials listed.</li>
+</ul>
+<p>Example: <a href="api.php?corpid=1000182&amp;region=10000002">api.php?corpid=1000182&amp;region=10000002</a> (Tribal Liberation Force, The Forge).</p>
+<p>It returns an array with one entry per offer, containing the offer id, <code>typeID</code> and <code>Item</code> name,
+<code>LPCost</code>, <code>IskCost</code>, <code>Quantity</code>, <code>OtherCostIsk</code> (the other required items, at sell price),
+sell and buy prices, sell and buy 5% volumes, isk/lp for both sell and buy, <code>Price Date</code> (UTC), and the list of
+<code>Other Requirements</code>. Blueprint offers also have <code>productTypeID</code> and <code>Materials</code>.</p>
+<p>To find IDs: <a href="api.php?list=corporations">api.php?list=corporations</a>,
+<a href="api.php?list=regions">api.php?list=regions</a> and <a href="api.php?list=items">api.php?list=items</a>.</p>
+<p>Errors come back as <code>{"error": "..."}</code> with a 400 or 404 status.</p>
+</div>
 </div>
 <?php include('/home/web/fuzzwork/htdocs/bootstrap/footer.php'); ?>
 </body>

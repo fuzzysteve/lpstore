@@ -60,4 +60,17 @@ function returnvolume($typeid=34,$regionid='10000002')
 }
 
 
+# When the price loader last finished writing prices, as ISO 8601 UTC, or null
+function returnpricedate()
+{
+        global $redis;
+        $updated=$redis->get('fp-lastupdate');
+        if (!isset($updated))
+        {
+            return null;
+        }
+        return gmdate('Y-m-d\TH:i:s\Z', strtotime($updated.' UTC'));
+}
+
+
 ?>
